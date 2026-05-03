@@ -5,6 +5,7 @@ import * as ordersApi from "../api/orders";
 import { ApiError } from "../api/client";
 import type { CartResponse, OrderResponse } from "../api/types";
 import { formatMoney } from "../lib/format";
+import { PaymentModal } from "../components/PaymentModal";
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<OrderResponse | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,9 +36,15 @@ export function CheckoutPage() {
     };
   }, []);
 
-  async function placeOrder(e: React.FormEvent) {
+  function openPaymentModal(e: React.FormEvent) {
     e.preventDefault();
     if (!cart || cart.items.length === 0) return;
+    setError(null);
+    setShowPayment(true);
+  }
+
+  async function handlePaymentConfirm() {
+    if (!cart) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -50,14 +58,16 @@ export function CheckoutPage() {
         shippingAddress: address.trim(),
         notes: notes.trim() || undefined,
       });
+      setShowPayment(false);
       setResult(order);
       try {
         const c = await cartApi.getCart();
         setCart(c);
       } catch {
-        /* cart may be empty */
+        /* cart may already be empty */
       }
     } catch (e) {
+      setShowPayment(false);
       setError(e instanceof ApiError ? e.message : "Order failed");
     } finally {
       setSubmitting(false);
@@ -88,14 +98,11 @@ export function CheckoutPage() {
             <p className="subtle">Payment id: {result.paymentId}</p>
           )}
           {paid && (
-            <p className="banner success">
-              Payment succeeded. Your cart may have been cleared.
-            </p>
+            <p className="banner success">Payment succeeded. Thank you!</p>
           )}
           {failed && (
             <p className="banner error">
-              Payment failed. Review the order and try again if your backend
-              allows it.
+              Payment failed. Check your order for details.
             </p>
           )}
           <div className="row">
@@ -122,56 +129,69 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="page narrow">
-      <h1>Checkout</h1>
-      <p className="subtle">
-        Placing an order triggers payment automatically (per backend).
-      </p>
-      {error && <p className="banner error">{error}</p>}
+    <>
+      {showPayment && (
+        <PaymentModal
+          amount={cart?.totalAmount ?? 0}
+          onConfirm={() => void handlePaymentConfirm()}
+          onCancel={() => setShowPayment(false)}
+          processing={submitting}
+        />
+      )}
 
-      <div className="card stack">
-        <h2>Items</h2>
-        <ul className="plain-list">
-          {items.map((i) => (
-            <li key={i.productId}>
-              {i.productName} × {i.quantity} —{" "}
-              {formatMoney(i.price * i.quantity)}
-            </li>
-          ))}
-        </ul>
-        <p className="total">
-          Total: <strong>{formatMoney(cart?.totalAmount ?? 0)}</strong>
-        </p>
-      </div>
+      <div className="page narrow">
+        <h1>Checkout</h1>
+        {error && <p className="banner error">{error}</p>}
 
-      <form onSubmit={(e) => void placeOrder(e)} className="card stack">
-        <label>
-          <span className="label-text">Shipping address</span>
-          <textarea
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            required
-            rows={3}
-            placeholder="Street, city, postal code…"
-          />
-        </label>
-        <label>
-          <span className="label-text">Notes (optional)</span>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={2}
-          />
-        </label>
-        <div className="row">
-          <button type="button" className="btn ghost" onClick={() => navigate(-1)}>
-            Back
-          </button>
-          <button type="submit" className="btn primary" disabled={submitting}>
-            {submitting ? "Submitting…" : "Place order"}
-          </button>
+        <div className="card stack">
+          <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Order summary</h2>
+          <ul className="plain-list">
+            {items.map((i) => (
+              <li key={i.productId}>
+                {i.productName} × {i.quantity} —{" "}
+                {formatMoney(i.price * i.quantity)}
+              </li>
+            ))}
+          </ul>
+          <p className="total">
+            Total: <strong>{formatMoney(cart?.totalAmount ?? 0)}</strong>
+          </p>
         </div>
-      </form>
-    </div>
+
+        <form onSubmit={openPaymentModal} className="card stack">
+          <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Shipping details</h2>
+          <label>
+            <span className="label-text">Shipping address</span>
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+              rows={3}
+              placeholder="Street, city, postal code…"
+            />
+          </label>
+          <label>
+            <span className="label-text">Notes (optional)</span>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
+          </label>
+          <div className="row">
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={() => navigate(-1)}
+            >
+              Back
+            </button>
+            <button type="submit" className="btn primary">
+              Continue to payment
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
   );
 }

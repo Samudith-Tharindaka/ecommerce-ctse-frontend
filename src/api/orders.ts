@@ -40,3 +40,24 @@ export function getOrder(id: string): Promise<OrderResponse> {
     auth: true,
   });
 }
+
+export function updateOrderStatus(
+  id: string,
+  status: string
+): Promise<OrderResponse> {
+  return apiJson<OrderResponse>(
+    `/api/orders/${encodeURIComponent(id)}/status`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+      auth: true,
+    }
+  );
+}
+
+export function cancelOrder(id: string): Promise<OrderResponse> {
+  return apiJson<OrderResponse>(`/api/orders/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}

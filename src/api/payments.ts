@@ -21,3 +21,17 @@ export function paymentHistory(params: {
     { method: "GET", auth: true }
   );
 }
+
+export function refundPayment(
+  id: string,
+  reason: string
+): Promise<PaymentResponse> {
+  return apiJson<PaymentResponse>(
+    `/api/payments/${encodeURIComponent(id)}/refund`,
+    {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+      auth: true,
+    }
+  );
+}

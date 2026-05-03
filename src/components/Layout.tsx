@@ -1,6 +1,10 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+function isAdmin(roles: string[]): boolean {
+  return roles.some((r) => r.toUpperCase().includes("ADMIN"));
+}
+
 const navClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? "nav-link active" : "nav-link";
 
@@ -55,6 +59,12 @@ export function Layout() {
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                   </svg>
                 </Link>
+                <Link to="/payments" className="header-icon" title="Payments">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                </Link>
                 <Link to="/cart" className="header-icon" title="Cart">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="9" cy="21" r="1"/>
@@ -64,7 +74,7 @@ export function Layout() {
                 </Link>
               </>
             )}
-            
+
             {user ? (
               <div className="header-actions">
                 <Link to="/seller" className="header-icon" title="Seller Dashboard">
@@ -73,6 +83,11 @@ export function Layout() {
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
                 </Link>
+                {isAdmin(user.roles) && (
+                  <Link to="/admin" className="btn ghost small" title="Admin Portal">
+                    Admin
+                  </Link>
+                )}
                 <span className="user-pill" title={user.email}>
                   {user.username}
                 </span>
