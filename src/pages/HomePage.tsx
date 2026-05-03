@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import * as catalog from "../api/catalog";
 import { ApiError } from "../api/client";
 import type { Product } from "../api/types";
@@ -16,6 +17,7 @@ const categories = [
 ];
 
 export function HomePage() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -84,12 +86,6 @@ export function HomePage() {
     setMode("search");
   }
 
-  function selectCategory(cat: string) {
-    setCategoryQ(cat);
-    setPage(0);
-    setMode("category");
-  }
-
   function showAll() {
     setMode("all");
     setCategoryQ("");
@@ -109,7 +105,7 @@ export function HomePage() {
         <div style={{ borderRight: "1px solid #e0e0e0", paddingRight: "1rem" }}>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {["Woman's Fashion", "Men's Fashion", "Electronics", "Home & Lifestyle", "Medicine", "Sports & Outdoor", "Baby's & Toys", "Groceries & Pets", "Health & Beauty"].map((cat) => (
-              <li key={cat} style={{ padding: "0.75rem 0", cursor: "pointer" }} onClick={() => selectCategory(cat)}>
+              <li key={cat} style={{ padding: "0.75rem 0", cursor: "pointer" }} onClick={() => navigate(`/products?category=${encodeURIComponent(cat)}`)}>
                 {cat}
               </li>
             ))}
@@ -191,7 +187,7 @@ export function HomePage() {
         </div>
 
         <div style={{ textAlign: "center", marginTop: "2rem" }}>
-          <button className="btn primary" onClick={showAll}>View All Products</button>
+          <button className="btn primary" onClick={() => navigate("/products")}>View All Products</button>
         </div>
       </section>
 
@@ -205,10 +201,10 @@ export function HomePage() {
 
         <div className="category-grid">
           {categories.map((cat) => (
-            <div 
-              key={cat.name} 
-              className={`category-card ${categoryQ === cat.name ? "active" : ""}`}
-              onClick={() => selectCategory(cat.name)}
+            <div
+              key={cat.name}
+              className="category-card"
+              onClick={() => navigate(`/products?category=${encodeURIComponent(cat.name)}`)}
             >
               <div className="category-icon">{cat.icon}</div>
               <div className="category-name">{cat.name}</div>
@@ -226,7 +222,7 @@ export function HomePage() {
         
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
           <h2 className="section-heading" style={{ margin: 0 }}>Best Selling Products</h2>
-          <button className="btn primary">View All</button>
+          <button className="btn primary" onClick={() => navigate("/products")}>View All</button>
         </div>
 
         <div className="product-grid">
@@ -350,7 +346,7 @@ export function HomePage() {
         )}
 
         <div style={{ textAlign: "center", marginTop: "2rem" }}>
-          <button className="btn primary">View All Products</button>
+          <button className="btn primary" onClick={() => navigate("/products")}>View All Products</button>
         </div>
       </section>
 
